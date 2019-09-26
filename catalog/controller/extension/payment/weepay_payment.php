@@ -1,7 +1,6 @@
 <?php
 
 error_reporting(0);
-
 class ControllerExtensionPaymentWeepayPayment extends Controller
 {
 
@@ -21,8 +20,8 @@ class ControllerExtensionPaymentWeepayPayment extends Controller
         $data['button_confirm'] = $this->language->get('button_confirm');
         $data['continue'] = $this->url->link('checkout/success');
         $data['error_page'] = $this->url->link('checkout/error');
-        $data['form_class'] = $this->config->get('payment_weepay_payment_form_type');
-        $data['form_type'] = $this->config->get('payment_weepay_payment_checkout_type');
+        $data['form_class'] = $this->config->get('weepay_payment_form_type');
+        $data['form_type'] = $this->config->get('weepay_payment_checkout_type');
         if (VERSION >= '2.2.0.0') {
             $template_url = 'extension/payment/weepay_payment.tpl';
         } else {
@@ -37,8 +36,8 @@ class ControllerExtensionPaymentWeepayPayment extends Controller
         try {
             $data['checkout_form_content'] = '';
             $data['error'] = '';
-            $data['form_class'] = $this->config->get('payment_weepay_payment_form_type');
-            $data['form_type'] = $this->config->get('payment_weepay_payment_checkout_type');
+            $data['form_class'] = $this->config->get('weepay_payment_form_type');
+            $data['form_type'] = $this->config->get('weepay_payment_checkout_type');
             $data['continue'] = $this->url->link('checkout/success');
             $data['error_page'] = $this->url->link('checkout/error');
             $data['display_direct_confirm'] = 'no';
@@ -79,15 +78,16 @@ class ControllerExtensionPaymentWeepayPayment extends Controller
             $order_info_ip = !empty($order_info['ip']) ? $order_info['ip'] : "NOT PROVIDED";
             if (function_exists('curl_version')) {
 
-                $bayiid = $this->config->get('payment_weepay_payment_bayiid');
-                $api = $this->config->get('payment_weepay_payment_api');
-                $secret = $this->config->get('payment_weepay_payment_secret');
+                $bayiid = $this->config->get('weepay_payment_bayiid');
+                $api = $this->config->get('weepay_payment_api');
+                $secret = $this->config->get('weepay_payment_secret');
                 $weepayArray = array();
                 $weepayArray['Aut'] = array(
                     'bayi-id' => $bayiid,
                     'api-key' => $api,
                     'secret-key' => $secret,
                 );
+
                 $weepayArray['Data'] = array(
                     'CallBackUrl' => $callback_url,
                     'Price' => $cart_total_amount,
@@ -118,7 +118,7 @@ class ControllerExtensionPaymentWeepayPayment extends Controller
             $this->response->setOutput(json_encode($result));
         }
         $this->response->addHeader('Content-Type: application/json');
-        $this->response->setOutput(json_encode($result, true));
+        $this->response->setOutput(json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
     }
 
     public function callback()
@@ -159,13 +159,13 @@ class ControllerExtensionPaymentWeepayPayment extends Controller
                     }
                     $this->db->query("UPDATE " . DB_PREFIX . "order_total SET  `value` = '" . (float) $calculate_total . "' WHERE order_id = '$order_id' AND code = 'total' ");
                     $this->db->query("UPDATE `" . DB_PREFIX . "order` SET total = '" . $calculate_total . "' WHERE order_id = '" . (int) $order_id . "'");
-                    $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $this->config->get('payment_weepay_payment_order_status_id'), $message, false);
+                    $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $this->config->get('weepay_payment_order_status_id'), $message, false);
                     $comment = ' - ' . $Result->Data->PaymentDetail->InstallmentNumber . '  Taksit';
                     $this->db->query("INSERT INTO " . DB_PREFIX . "order_history SET order_id = '" . (int) $order_id . "', order_status_id = '" .
-                        $this->config->get('payment_weepay_payment_order_status_id') . "', notify = '0', comment = '" .
+                        $this->config->get('weepay_payment_order_status_id') . "', notify = '0', comment = '" .
                         $this->db->escape($comment) . "', date_added = NOW()");
                 } else {
-                    $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $this->config->get('payment_weepay_payment_order_status_id'), $message, false);
+                    $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $this->config->get('weepay_payment_order_status_id'), $message, false);
                 }
                 $this->response->redirect($this->url->link('checkout/success', '', $server_conn_slug));
             }
@@ -230,9 +230,9 @@ class ControllerExtensionPaymentWeepayPayment extends Controller
 
     public function GetOrderData($id_order)
     {
-        $bayiid = $this->config->get('payment_weepay_payment_bayiid');
-        $api = $this->config->get('payment_weepay_payment_api');
-        $secret = $this->config->get('payment_weepay_payment_secret');
+        $bayiid = $this->config->get('weepay_payment_bayiid');
+        $api = $this->config->get('weepay_payment_api');
+        $secret = $this->config->get('weepay_payment_secret');
         $weepayArray = array();
         $weepayArray['Aut'] = array(
             'bayi-id' => $bayiid,
